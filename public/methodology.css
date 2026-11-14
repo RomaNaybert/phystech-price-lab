@@ -1,0 +1,29 @@
+.methodology {max-width:1160px;margin:24px auto 50px;color:var(--ink)}
+.methodology-hero {display:grid;grid-template-columns:1.25fr minmax(0,1fr);align-items:center;gap:20px;background:linear-gradient(120deg,#fff8f4,#f3e5fb);border:1px solid var(--line);border-radius:28px;padding:clamp(20px,4vw,55px)}
+.methodology-hero h1 {font-size:clamp(33px,5.1vw,68px);line-height:1.02;letter-spacing:-.055em;margin:0 0 18px;max-width:11ch}
+.methodology-hero p {font-size:clamp(16px,2vw,21px);max-width:44ch;color:var(--muted)}
+.methodology-hero .primary {display:inline-flex;text-decoration:none;margin-top:12px}
+.methodology-hero img {display:block;max-width:100%;width:100%;height:auto;max-height:330px;object-fit:contain}
+.methodology-nav {display:flex;flex-wrap:wrap;gap:9px;margin:22px 0}
+.methodology-nav a {display:flex;align-items:center;min-height:44px;padding:6px 14px;border-radius:100px;background:#eadbf2;color:#4e1c88;font-weight:750;text-decoration:none}
+.methodology-nav a:hover {text-decoration:underline}
+.methodology-sections {display:grid;gap:14px}
+.methodology-sections section {padding:clamp(17px,3vw,32px);border:1px solid var(--line);border-radius:22px;background:var(--paper);scroll-margin-top:14px}
+.methodology-sections h2 {font-size:clamp(23px,3vw,38px);line-height:1.12;letter-spacing:-.04em;margin:0 0 14px}
+.methodology-sections h3 {font-size:21px;margin:0 0 7px}
+.methodology-sections p {max-width:80ch;line-height:1.58;margin:0 0 10px}
+.methodology-sections p:last-child {margin-bottom:0}
+.methodology details {margin-top:12px;border:0;border-radius:12px;padding:12px 15px;background:#f3e8f6;color:var(--ink)}
+.methodology summary {cursor:pointer;font-weight:750}
+.methodology details p {margin-top:8px}
+.methodology-formula {background:#e7f2e5;border-radius:16px;padding:17px;margin-bottom:12px}
+.methodology-formula strong {display:block;font-size:clamp(17px,2.5vw,25px);margin-bottom:7px}
+.methodology-modes {display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.methodology-modes > div {border-radius:16px;background:#f3e8f6;padding:16px}
+.methodology-modes > div + div {background:#f9ebe4}
+@media (max-width:700px) {
+  .methodology {margin-top:14px}
+  .methodology-hero {grid-template-columns:1fr;gap:0}
+  .methodology-hero img {height:190px;width:auto;max-width:100%;margin:10px auto 0}
+  .methodology-modes {grid-template-columns:1fr}
+}

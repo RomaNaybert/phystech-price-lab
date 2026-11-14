@@ -1,5 +1,5 @@
-import {units, evaluate, round, deliveredEstimate} from './analysis.js?v=62';
-import {parseSpecification,parsePdfSpecification,positionRequest,suggestedAnalogQuery} from './specification.js?v=62';
+import {units, evaluate, round, deliveredEstimate} from './analysis.js?v=63';
+import {parseSpecification,parsePdfSpecification,positionRequest,suggestedAnalogQuery} from './specification.js?v=63';
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -45,6 +45,7 @@ let editingOffer=null;
 let pricingMode='strict';
 let positions=[];
 let activePosition=null;
+let manualState=null;
 let batchRunning=false;
 let batchStopped=false;
 let specFileName='';
@@ -53,6 +54,10 @@ let zipLibrary;
 
 function requestFromForm(){
   return {description:$('description').value.trim(),quantity:Number($('quantity').value),unit:$('unit').value,pricingMode,deepSearch:$('deep-search').checked};
+}
+
+function emptySearch(request){
+  return {request,query:'',mode:'idle',rows:[],overrides:{},sources:[]};
 }
 
 function showExample(name){
@@ -115,8 +120,9 @@ function render(){
   document.body.classList.toggle('searching',isLoading);
   result=evaluate(state.rows,state.request,state.overrides);
   if(activePosition) activePosition.result=state;
+  else if(state.mode!=='loading') manualState=state;
   renderPositions();
-  $('result-mode').textContent=isDemo?'Демо':isLoading?'Поиск':'Расчёт';
+  $('result-mode').textContent=isDemo?'Демо':isLoading?'Поиск':state.mode==='idle'?'Новый запрос':'Расчёт';
   const estimate=result.preliminary ?? result;
   $('strict-method').hidden=result.lite;
   $('strict-outliers').hidden=result.lite;
@@ -238,7 +244,7 @@ function render(){
       const checkbox=canToggle(row)?'<input class="check" type="checkbox" aria-label="Учесть предложение '+esc(row.title)+'" data-toggle="'+index+'" '+(isChecked(row)?'checked':'')+'>':'';
       return '<tr><td><strong class="offer-title">'+esc(row.title)+'</strong><span class="row-meta">'+esc(row.reason)+'</span><button class="row-title offer-detail" type="button" data-detail="'+index+'">'+action+'</button></td><td>'+sourceLink(row)+'<span class="row-meta"><span class="status '+row.state+'">'+badges[row.state]+'</span></span>'+(row.analog?'<span class="row-meta">Кандидат в аналоги</span>':'')+preliminary+'</td><td>'+(row.unitPrice?money(row.unitPrice):row.web&&row.price?esc(sourceMoney(row))+'<span class="row-meta">Единицу уточнить</span>':money(null))+'</td>'+(showInclude?'<td>'+checkbox+'</td>':'')+'</tr>';
     }).join('')+'</tbody></table>'
-    : '<div class="empty">'+(isLoading?'Источники отвечают независимо. Обычно это занимает несколько секунд.':all.length?'В этом разделе пока нет предложений.':'Открытых цен по запросу пока нет. Уточните публичное наименование или добавьте проверенное предложение.')+'</div>';
+    : '<div class="empty">'+(isLoading?'Источники отвечают независимо. Обычно это занимает несколько секунд.':all.length?'В этом разделе пока нет предложений.':!state.searched?'Запустите поиск или добавьте проверенное предложение.':'Открытых цен по запросу пока нет. Уточните публичное наименование или добавьте проверенное предложение.')+'</div>';
 }
 
 function syncInputs(){
@@ -260,22 +266,24 @@ $('variation-help-button').addEventListener('click',()=>open('variation-help'));
 document.querySelectorAll('[data-close]').forEach(button=>button.addEventListener('click',()=>button.closest('dialog').close()));
 document.querySelectorAll('dialog').forEach(dialog=>dialog.addEventListener('click',event=>{if(event.target!==dialog)return;const rect=dialog.getBoundingClientRect();if(event.clientX<rect.left||event.clientX>rect.right||event.clientY<rect.top||event.clientY>rect.bottom)dialog.close();}));
 function showSection(section){
-  const details=section!=='purchase';
+  const details=section!=='purchase' && section!=='method';
+  $('method').hidden=section!=='method';
   document.body.dataset.section=section;
   $('calculation-details').hidden=!details;
-  $('specification').hidden=details;
-  document.querySelector('.workflow').hidden=details;
+  $('specification').hidden=section!=='purchase';
+  document.querySelector('.workflow').hidden=section!=='purchase';
   $('results-header').hidden=section!=='results';
   document.querySelectorAll('.sidebar nav a').forEach(link=>{
     if((link.hash==='#offers-title')===(section==='results')) link.setAttribute('aria-current','page');
     else link.removeAttribute('aria-current');
   });
-  if(section==='method') document.querySelector('.method-content').open=true;
+
+  if(section==='manual' && !activePosition && state) renderPositions();
   if(section==='manual' && $('spec-modes').parentElement!==$('purchase')) $('purchase').insertBefore($('spec-modes'),$('purchase').querySelector('.examples'));
 }
 function syncSection(){
   const sections={'#offers-title':'results','#subject-title':'manual','#method':'method'};
-  showSection(sections[location.hash]??'purchase');
+  showSection(sections[location.hash]??(location.hash.startsWith('#method-')?'method':'purchase'));
 }
 function goToSection(section,hash){
   if(batchRunning && section!=='purchase') return;
@@ -422,7 +430,10 @@ async function runSearch(query,request){
       ? {...request,analogs:true,analogQuery:printerAnalogQuery}
       : request;
     const response=await fetch('/hack-phystech/api/search',{method:'POST',headers:{'Content-Type':'application/json',Accept:'application/x-ndjson'},body:JSON.stringify({query,...searchRequest}),signal:controller.signal});
-    if(!response.ok) throw new Error((await response.json()).error);
+    if(!response.ok){
+      const error=await response.json().catch(()=>null);
+      throw new Error(error?.error ?? 'Поиск сейчас недоступен. Попробуйте ещё раз.');
+    }
     const reader=response.body.pipeThrough(new TextDecoderStream()).getReader();
     let buffer='', data;
     while(true){
@@ -545,12 +556,12 @@ $('detail-body').addEventListener('click',event=>{
   render();
 });
 function openManual(row, termsOnly=false){
-  if(state.mode==='demo' && !$('purchase').checkValidity()){
+  if((state.mode==='demo' || state.mode==='idle') && !$('purchase').checkValidity()){
     goToSection('manual','#subject-title');
     $('purchase').reportValidity();
     return;
   }
-  const request=state.mode==='demo'?requestFromForm():state.request;
+  const request=state.mode==='demo' || state.mode==='idle' ? requestFromForm() : state.request;
   const form=$('manual-form');
   form.reset();
   editingOffer=termsOnly?row.id:null;
@@ -580,7 +591,7 @@ $('manual-form').addEventListener('submit',event=>{
   const url=safeLink(fields.url);
   if(!url){$('manual-error').textContent='Введите публичную ссылку, начинающуюся с https://.';return;}
   if(!editingOffer && state.rows.some(r=>r.url===url&&!r.web)){$('manual-error').textContent='Это предложение уже есть в выборке.';return;}
-  if(state.mode==='demo') state={...state,mode:'live',rows:[],overrides:{},sources:[],query:'',request:requestFromForm()};
+  if(state.mode==='demo' || state.mode==='idle') state={...emptySearch(requestFromForm()),mode:'live'};
   const price=Number(fields.price), multiplier=Number(fields.multiplier);
   const shippingRegion=fields['shipping-region'].trim();
   const shippingCost=fields['shipping-cost'];
@@ -714,7 +725,9 @@ $('download-report').addEventListener('click',()=>{
   link.click();
   setTimeout(()=>URL.revokeObjectURL(url),3000);
 });
-showExample('paper');
+$('quantity').value=1;
+state=emptySearch(requestFromForm());
+render();
 
 function blankPosition(){
   return {title:'',query:'',analogQuery:'',requirements:'',quantity:1,unit:'шт.',code:'',delivery:''};
@@ -867,8 +880,17 @@ $('open-spec').addEventListener('click',()=>{
 $('spec-import').addEventListener('close',()=>$('intake-slot').append(picker));
 $('go-manual').addEventListener('click',()=>{
   if($('spec-import').open) $('spec-import').close();
+  if(activePosition){
+    liveController?.abort();
+    activePosition=null;
+    state=manualState??emptySearch({description:'',quantity:1,unit:units[0],pricingMode});
+    $('description').value=state.request.description;
+    $('quantity').value=state.request.quantity;
+    $('unit').value=state.request.unit;
+    filter='all';
+    render();
+  }
   goToSection('manual','#subject-title');
-  renderPositions();
   requestAnimationFrame(()=>$('description').focus());
 });
 $('spec-file').addEventListener('change',event=>importSpecification(event.target.files[0]));

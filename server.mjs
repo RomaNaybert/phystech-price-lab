@@ -51,9 +51,11 @@ const server=createServer(async (req,res)=>{
       const quantity=input?.quantity;
       const unit=input?.unit;
       const pricingMode=input?.pricingMode==='lite'?'lite':'strict';
-      const request=req.headers.accept==='application/x-ndjson' && description.length>=3 && description.length<=700 && Number.isFinite(quantity) &&
+      const streaming=req.headers.accept==='application/x-ndjson';
+      const request=streaming && description.length>=3 && description.length<=700 && Number.isFinite(quantity) &&
         quantity>0 && quantity<=1e9 && units.includes(unit) ? {description,quantity,unit,pricingMode,analogs:input?.analogs===true,analogQuery,
           deepSearch:input?.deepSearch===true} : undefined;
+      if(streaming && !request) return json(res,400,{error:'Проверьте описание, количество и единицу измерения.'});
       const key=JSON.stringify([query.toLocaleLowerCase('ru'),request]);
       let hit=cache.get(key);
       if(!hit || (hit.finished && hit.expires<Date.now())){
@@ -76,7 +78,7 @@ const server=createServer(async (req,res)=>{
           }).finally(()=>{run.finished=true;active--;});
         cache.set(key,hit);
       }
-      if(req.headers.accept==='application/x-ndjson'){
+      if(streaming){
         res.writeHead(200,{'Content-Type':'application/x-ndjson; charset=utf-8','X-Accel-Buffering':'no','Cache-Control':'no-store'});
         res.flushHeaders();
         const send=update=>res.write(JSON.stringify(update)+'\n');
