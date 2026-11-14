@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Сопоставьте открытые рыночные предложения и подготовьте проверяемое обоснование начальной цены договора.">
+  <title>НМЦД / Лаборатория цен</title>
+  <link rel="icon" type="image/webp" href="/hack-phystech/assets/pastel-flask.webp">
+  <link rel="stylesheet" href="/hack-phystech/style.css">
+  <link rel="stylesheet" href="/hack-phystech/workspace.css?v=62">
+  <script type="module" src="/hack-phystech/app.js?v=62"></script>
+</head>
+<body>
+  <header class="mast">
+    <a class="wordmark" href="#calculation"><b>НМЦД</b><span aria-hidden="true">/</span><strong>Лаборатория цен</strong></a>
+    <div class="header-actions"><a href="#method">Методика</a><button id="open-onboarding" type="button">Как начать</button></div>
+  </header>
+  <div class="app-shell">
+  <aside class="sidebar">
+    <nav aria-label="Разделы">
+      <a href="#calculation" aria-current="page"><i class="icon clipboard" aria-hidden="true"></i>Закупка по ТЗ</a>
+      <a href="#offers-title"><i class="icon chart" aria-hidden="true"></i>Результаты</a>
+      <button id="nav-report" type="button"><i class="icon report" aria-hidden="true"></i>Отчёт</button>
+    </nav>
+  </aside>
+  <main class="wrap" id="calculation">
+    <ol class="workflow" aria-label="Этапы закупки">
+      <li aria-current="step"><span>1</span><strong>Загрузка</strong></li>
+      <li><span>2</span><strong>Позиции</strong></li>
+      <li><span>3</span><strong>Поиск</strong></li>
+      <li><span>4</span><strong>Обоснование</strong></li>
+    </ol>
+    <section class="panel specification" id="specification" aria-labelledby="spec-title">
+      <h1 id="spec-title"><i class="icon report" aria-hidden="true"></i><span id="spec-title-text">Новая закупка по ТЗ</span></h1>
+      <p class="spec-file-name" id="spec-file-name" hidden></p>
+      <div class="intake" id="spec-welcome">
+        <div id="intake-slot">
+          <div id="spec-picker">
+            <div id="spec-drop">
+              <img src="/hack-phystech/assets/pastel-folder.webp" alt="" width="320" height="260">
+              <strong>Перетащите ТЗ сюда</strong>
+              <span class="file-formats">DOCX · PDF</span>
+              <label class="primary file-button" for="spec-file"><i class="icon upload" aria-hidden="true"></i>Выбрать файл</label>
+              <input type="file" id="spec-file" accept=".docx,.pdf" aria-label="Выбрать техническое задание">
+              <button type="button" class="text-button" id="go-manual">Ввести вручную</button>
+            </div>
+            <p id="spec-import-message" role="status"></p>
+          </div>
+        </div>
+        <div class="intake-details">
+          <h2>После загрузки</h2>
+          <ul>
+            <li><i class="icon ok" aria-hidden="true"></i>Проверьте позиции из ТЗ</li>
+            <li><i class="icon ok" aria-hidden="true"></i>Найдите цены и аналоги</li>
+            <li><i class="icon ok" aria-hidden="true"></i>Скачайте обоснование НМЦД</li>
+          </ul>
+        </div>
+      </div>
+      <div class="batch-hero" id="batch-hero" hidden>
+        <div class="batch-progress">
+          <progress id="batch-progress" aria-label="Проверено позиций"></progress>
+          <strong id="batch-count"></strong>
+          <p id="spec-message" role="status"></p>
+        </div>
+        <div class="scanner" aria-hidden="true">
+          <div class="scanner-feed">
+            <div class="scanner-sheet"><div class="scanner-paper">
+              <img src="/hack-phystech/assets/scanner-sheet.webp" alt="" width="601" height="850">
+              <span class="scanner-beam"></span>
+            </div></div>
+          </div>
+          <img class="scanner-body" src="/hack-phystech/assets/pastel-scanner.webp" alt="">
+        </div>
+      </div>
+      <div id="queue-panel" hidden>
+        <div class="queue-head" aria-hidden="true"><span>Позиция</span><span>Статус</span><span>Источники</span></div>
+        <ol id="spec-queue" aria-label="Поиск по позициям"></ol>
+      </div>
+      <p id="spec-feedback" role="status"></p>
+      <p id="spec-total" aria-live="polite"></p>
+      <div id="spec-mode-slot"></div>
+      <div id="spec-positions" hidden></div>
+      <div class="spec-actions" id="spec-actions" hidden>
+        <span id="batch-summary" hidden></span>
+        <button type="button" class="outline" id="open-spec">Загрузить другой файл</button>
+        <button type="button" class="outline" id="spec-add">Добавить позицию</button>
+        <button type="button" class="primary" id="spec-run" hidden disabled>Найти цены и аналоги</button>
+        <button type="button" class="outline" id="spec-stop" hidden>Остановить поиск</button>
+      </div>
+    </section>
+    <div class="layout" id="calculation-details" hidden>
+      <div class="results-header" id="results-header" hidden>
+        <div class="results-heading"><h1>Результаты закупки</h1><button type="button" class="outline" id="results-report"><i class="icon report" aria-hidden="true"></i>Открыть обоснование</button></div>
+        <p id="results-total"></p>
+        <label id="result-position-label" hidden>Позиция<select id="result-position"></select></label>
+      </div>
+      <section class="procurement" aria-labelledby="subject-title">
+        <h1 id="subject-title">Описать закупку вручную</h1>
+        <p class="muted">Укажите предмет закупки и основные параметры для поиска предложений.</p>
+        <form id="purchase">
+        <fieldset class="pricing-modes" id="spec-modes">
+          <legend>Поиск и расчёт</legend>
+          <div class="mode-options" role="radiogroup" aria-label="Режим расчёта">
+            <label class="mode-option"><input type="radio" name="pricing-mode" value="strict" checked><img src="/hack-phystech/assets/mode-strict.webp" alt="" width="48" height="48"><span><strong>Строгий</strong><small>Для обоснования НМЦД</small></span></label>
+            <label class="mode-option"><input type="radio" name="pricing-mode" value="lite"><img src="/hack-phystech/assets/mode-lite.webp" alt="" width="48" height="48"><span><strong>Лайт</strong><small>Для оценки рынка</small></span></label>
+          </div>
+          <label class="mode-option mode-option-deep"><input id="deep-search" type="checkbox"><img src="/hack-phystech/assets/mode-deep.webp" alt="" width="48" height="48"><span><strong>Глубокий поиск</strong><small>Больше запросов и каталогов. Занимает дольше.</small></span></label>
+        </fieldset>
+          <label class="manual-description">Описание и существенные характеристики<textarea id="description" required minlength="3" maxlength="700" rows="3"></textarea></label>
+          <div class="inputs">
+            <div><label for="quantity">Количество</label><input id="quantity" type="number" min="0.001" max="1000000" step="any" required></div>
+            <div><label for="unit">Единица</label><select id="unit"></select></div>
+
+          </div>
+          <p id="input-note" class="input-note" role="status" hidden>Описание или единица изменились. Запустите новый поиск, чтобы обновить выборку.</p>
+          <div class="examples">
+            <span>Примеры</span>
+            <button type="button" data-example="paper">Офисная бумага</button>
+            <button type="button" data-example="cups">Стаканы</button>
+          </div>
+          <button class="primary manual-submit" type="submit"><i class="icon search" aria-hidden="true"></i>Найти предложения</button>
+        </form>
+      </section>
+      <section class="panel estimate" aria-labelledby="estimate-title">
+        <div class="estimate-top"><h2 id="estimate-title">Рекомендуемая НМЦД</h2><span id="result-mode" class="chip"></span></div>
+        <img class="estimate-art" src="/hack-phystech/assets/pastel-report.webp" alt="" width="90" height="75">
+        <div id="total" class="total" aria-live="polite">—</div>
+        <p class="estimate-note" id="estimate-note"></p>
+        <p class="muted" id="delivered-note" hidden></p>
+        <dl class="metrics">
+          <div><dt>Средняя за ед.</dt><dd id="average">—</dd></div>
+          <div><dt id="count-label">Источники</dt><dd id="count">—</dd></div>
+          <div><dt>Вариация <button id="variation-help-button" class="metric-help" type="button" aria-label="Что означает вариация цен" aria-haspopup="dialog" aria-controls="variation-help">?</button></dt><dd id="cv">—</dd></div>
+        </dl>
+        <button type="button" class="estimate-action" id="estimate-action" hidden></button>
+
+      </section>
+      <section class="panel offers" aria-labelledby="offers-title">
+        <div class="section-head"><div><h2 id="offers-title">Рыночные предложения</h2><p class="muted" id="offers-subtitle"></p></div>
+          <button id="add-offer" class="outline small"><i class="icon plus" aria-hidden="true"></i>Добавить КП</button></div>
+        <div id="search-progress" class="search-progress" hidden>
+          <div class="progress-intro"><img src="/hack-phystech/assets/pastel-quotes.webp" alt="" width="110" height="74"><div><h3 id="search-progress-title">Собираем предложения…</h3><p id="progress-count"></p><progress id="progress-bar" value="0" max="6" aria-label="Проверка источников"></progress></div></div>
+          <div id="round-loader" class="round-loader" hidden>
+            <span id="round-spinner" class="round-spinner" aria-hidden="true"></span>
+            <div role="status" aria-atomic="true">
+              <strong id="round-stage"></strong>
+              <p id="round-status"></p>
+            </div>
+          </div>
+        </div>
+        <div class="sources" id="sources" aria-live="polite"></div>
+        <div class="outcome" id="outcome"></div>
+        <details id="round-history" hidden><summary>Что нашлось по раундам</summary><ol id="round-list"></ol></details>
+        <div class="feedback" id="feedback" role="status" hidden></div>
+        <details id="deep-metrics" hidden><summary>Статистика глубокого поиска</summary><p id="deep-metrics-text"></p></details>
+        <div class="filters" id="filters" aria-label="Фильтр предложений">
+          <button data-filter="all" aria-pressed="true">Все <span></span></button>
+          <button data-filter="eligible" aria-pressed="false">В расчёте <span></span></button>
+          <button data-filter="review" aria-pressed="false">На проверку <span></span></button>
+          <button data-filter="analogs" aria-pressed="false">Аналоги <span></span></button>
+          <button data-filter="web" aria-pressed="false">Из веб-поиска <span></span></button>
+          <button data-filter="excluded" aria-pressed="false">Исключены <span></span></button>
+        </div>
+        <div id="offer-list"></div>
+      </section>
+      <aside class="panel method" id="method" aria-labelledby="method-title">
+        <details class="method-content"><summary id="method-title">Как считается цена</summary>
+        <ol class="method-steps">
+          <li><span>01</span><div><strong>Найти</strong><br>Проверяем открытые каталоги и реестр контрактов.</div></li>
+          <li><span>02</span><div><strong>Сопоставить</strong><br>Сверяем характеристики и цену за одну единицу. Оставляем по одному предложению продавца.</div></li>
+          <li><span>03</span><div><strong>Рассчитать</strong><br>Умножаем среднюю цену за единицу на количество.</div></li>
+        </ol>
+        <div class="formula">НМЦД = Ц̄ × Q</div>
+        <p id="strict-method">Ц̄ — средняя цена за единицу, Q — количество. Для рекомендуемой НМЦД нужны от трёх независимых продавцов и вариация не выше 33%. Если подтверждённых цен меньше, показываем предварительную оценку и при возможности дополняем её ценами из «На проверку». При вариации выше 30% проверьте предложения.</p>
+        <p id="lite-method" hidden>Учитываем предложения с релевантностью от 40 и доступной ценой, в том числе цены на проверку. Исключаем явные несоответствия, найденные ИИ и подкреплённые цитатой из карточки. Вариация до 70% допустима. При большем разбросе показываем сумму с предупреждением.</p>
+        <details id="strict-outliers"><summary>Правило исключения выбросов</summary><p>При четырёх и более сопоставимых ценах исключаем значения ниже 65% или выше 145% медианы. Вариацию считаем по выборочному стандартному отклонению.</p></details>
+        </details>
+      </aside>
+    </div>
+    <footer>Лаборатория цен <span>Хакатон «ИИ в системе управления МФТИ»</span></footer>
+  </main>
+  </div>
+  <dialog id="spec-import" class="modal" aria-labelledby="spec-import-title">
+    <div class="dialog-head">
+      <h2 id="spec-import-title">Загрузите техническое задание</h2>
+      <form method="dialog"><button class="close" aria-label="Закрыть"><i class="icon close-icon" aria-hidden="true"></i></button></form>
+    </div>
+    <div id="import-slot"></div>
+  </dialog>
+  <dialog id="onboarding" class="modal onboarding" aria-labelledby="onboarding-title" aria-describedby="onboarding-description">
+    <div class="onboarding-visual" aria-hidden="true">
+      <img id="onboarding-art" src="/hack-phystech/assets/pastel-folder.webp" alt="" width="680" height="680">
+    </div>
+    <div class="onboarding-content">
+      <div class="tour-brand"><i class="icon flask" aria-hidden="true"></i>Лаборатория цен</div>
+      <button class="close onboarding-close" type="button" aria-label="Закрыть знакомство" data-close><i class="icon close-icon" aria-hidden="true"></i></button>
+      <div class="onboarding-progress">
+        <span id="onboarding-step"></span>
+        <div class="onboarding-segments" aria-hidden="true"></div>
+      </div>
+      <div class="onboarding-story">
+        <h2 id="onboarding-title" tabindex="-1"></h2>
+        <p id="onboarding-description"></p>
+        <ul id="onboarding-modes" hidden></ul>
+        <p class="onboarding-tip" id="onboarding-tip"></p>
+      </div>
+      <div class="onboarding-actions">
+        <button type="button" class="onboarding-skip" id="onboarding-skip" data-close>Пропустить</button>
+        <button type="button" class="outline" id="onboarding-back">Назад</button>
+        <button type="button" class="primary" id="onboarding-next">Далее</button>
+      </div>
+    </div>
+  </dialog>
+  <dialog id="description-dialog" class="modal" aria-labelledby="description-title">
+    <div class="dialog-head">
+      <h2 id="description-title">Уточните описание</h2>
+      <button class="close" type="button" data-close aria-label="Закрыть"><i class="icon close-icon" aria-hidden="true"></i></button>
+    </div>
+    <p id="description-warning"></p>
+    <p class="muted">Для подсказки ИИ получит текст описания. Проверьте, что в нём нет внутренних данных или контактов.</p>
+    <div id="description-suggestion-wrap" hidden>
+      <label for="description-suggestion">Предложенный вариант</label>
+      <textarea id="description-suggestion" rows="4" maxlength="700"></textarea>
+      <p class="muted">Заполните пропуски или оставьте те, по которым нет требований.</p>
+    </div>
+    <p id="description-status" role="status" hidden></p>
+    <div class="dialog-actions">
+      <button type="button" class="outline" id="description-continue">Искать как есть</button>
+      <button type="button" class="primary" id="description-improve">Улучшить с ИИ</button>
+      <button type="button" class="primary" id="description-apply" hidden>Использовать описание</button>
+    </div>
+  </dialog>
+  <dialog id="search-dialog" class="modal" aria-labelledby="search-title">
+    <div class="dialog-head"><div><p class="eyebrow">Открытые источники</p><h2 id="search-title">Проверьте поисковый запрос</h2></div>
+      <button class="close" type="button" data-close aria-label="Закрыть"><i class="icon close-icon" aria-hidden="true"></i></button></div>
+    <form id="market-search">
+      <p>Агент и каталоги получат строку поиска. Сайт сверит найденные предложения с описанием и количеством. Проверьте, что в строке поиска нет внутренних данных или контактов.</p>
+      <label for="query">Публичное наименование</label>
+      <input id="query" minlength="3" maxlength="130" required autocomplete="off">
+      <div class="dialog-actions"><button type="button" class="outline" data-close>Назад</button><button class="primary" type="submit"><i class="icon search" aria-hidden="true"></i>Запустить поиск</button></div>
+    </form>
+  </dialog>
+  <dialog id="variation-help" class="modal status-help" aria-labelledby="variation-help-title">
+    <div class="dialog-head">
+      <h2 id="variation-help-title">Что означает вариация цен</h2>
+      <button class="close" type="button" data-close aria-label="Закрыть"><i class="icon close-icon" aria-hidden="true"></i></button>
+    </div>
+    <p>Вариация показывает, насколько цены из расчёта разбросаны относительно средней цены. Чем ниже процент, тем ближе цены друг к другу. Если все цены одинаковы, вариация равна 0%.</p>
+    <p>В строгом режиме для рекомендуемой НМЦД нужна вариация до 33% включительно. В режиме «Лайт» допустимо до 70%. Если есть только одна цена, процент не рассчитывается.</p>
+    <div class="dialog-actions"><button class="primary" type="button" data-close>Понятно</button></div>
+  </dialog>
+  <dialog id="status-help-review" class="modal status-help" aria-labelledby="status-help-review-title">
+    <div class="dialog-head">
+      <h2 id="status-help-review-title">Почему «На проверку»</h2>
+      <button class="close" type="button" data-close aria-label="Закрыть"><i class="icon close-icon" aria-hidden="true"></i></button>
+    </div>
+    <p>Предложение может подойти. В строгом режиме цена может попасть в предварительную оценку. В режиме «Лайт» доступная цена учитывается при релевантности от 40.</p>
+    <ul>
+      <li>Не хватает характеристики. Например, в карточке стакана не указан объём.</li>
+      <li>По названию сложно понять, подходит ли товар.</li>
+      <li>Веб-поиск нашёл карточку, но цену в рублях за нужную единицу не удалось подтвердить. Например, есть цена упаковки, а количество стаканов в ней неизвестно.</li>
+    </ul>
+    <p>Откройте «Проверить предложение», чтобы увидеть причину, сверить характеристики или внести подтверждённую цену.</p>
+    <div class="dialog-actions"><button class="primary" type="button" data-close>Понятно</button></div>
+  </dialog>
+  <dialog id="status-help-excluded" class="modal status-help" aria-labelledby="status-help-excluded-title">
+    <div class="dialog-head">
+      <h2 id="status-help-excluded-title">Почему «Исключено»</h2>
+      <button class="close" type="button" data-close aria-label="Закрыть"><i class="icon close-icon" aria-hidden="true"></i></button>
+    </div>
+    <p>В режиме «Лайт» предложение исключается при релевантности ниже 40, при явном несоответствии с цитатой из карточки или вручную. В строгом режиме возможны и другие причины.</p>
+    <ul>
+      <li>Другой товар, марка или характеристика. Например, стакан на 200 мл при запросе на 250 мл.</li>
+      <li>Товар недоступен, цена за единицу не подтверждена или заказ меньше минимума продавца.</li>
+      <li>У этого продавца уже есть более подходящее предложение в выборке.</li>
+      <li>Цена сильно отличается от медианы или предложение исключили вручную.</li>
+    </ul>
+    <p>Точная причина указана под названием предложения и в его карточке.</p>
+    <div class="dialog-actions"><button class="primary" type="button" data-close>Понятно</button></div>
+  </dialog>
+  <dialog id="detail-dialog" class="modal drawer" aria-labelledby="detail-title">
+    <div class="dialog-head"><div><p class="eyebrow">Карточка предложения</p><h2 id="detail-title">Проверить предложение</h2></div>
+      <button class="close" type="button" data-close aria-label="Закрыть"><i class="icon close-icon" aria-hidden="true"></i></button></div>
+    <div id="detail-body"></div>
+  </dialog>
+  <dialog id="manual-dialog" class="modal" aria-labelledby="manual-title">
+    <div class="dialog-head"><div><p class="eyebrow">Ручной ввод</p><h2 id="manual-title">Добавить предложение</h2></div>
+      <button class="close" type="button" data-close aria-label="Закрыть"><i class="icon close-icon" aria-hidden="true"></i></button></div>
+    <form id="manual-form">
+      <p id="manual-position" class="muted"></p>
+      <p>Укажите опубликованное предложение, которое вы проверили, и условия, влияющие на цену.</p>
+      <label>Продавец<input name="seller" required maxlength="90"></label>
+      <label>Название и характеристики<textarea name="title" required maxlength="500" rows="2"></textarea></label>
+      <label>Ссылка на источник<input name="url" type="url" required maxlength="600" placeholder="https://…"></label>
+      <div class="form-pair"><label>Цена предложения, ₽<input name="price" type="number" min="0.01" max="1000000000" step=".01" required></label><label>Единиц закупки в цене<input name="multiplier" type="number" value="1" min=".001" max="1000000" step="any" required></label></div>
+      <label>Условия поставки<input name="conditions" maxlength="400"></label>
+      <fieldset><legend>Подтверждённая доставка и НДС</legend>
+        <label>Регион доставки<input name="shipping-region" maxlength="100" placeholder="Например, Москва"></label>
+        <label>Доставка за всю позицию, ₽<input name="shipping-cost" type="number" min="0" max="1000000000" step=".01"></label>
+        <label>НДС в цене товара и доставки<select name="shipping-vat"><option value="">Не уточнён</option><option value="included">Включён</option><option value="excluded">Не начисляется</option></select></label>
+      </fieldset>
+      <label class="confirm"><input type="checkbox" required> Я проверил характеристики, цену и условия</label>
+      <p id="manual-error" role="alert" class="muted"></p>
+      <div class="dialog-actions"><button type="button" class="outline" data-close>Отмена</button><button class="primary" type="submit">Добавить</button></div>
+    </form>
+  </dialog>
+  <dialog id="report-settings" class="modal" aria-labelledby="report-settings-title">
+    <div class="dialog-head"><h2 id="report-settings-title">Настройки отчёта</h2>
+      <button class="close" type="button" data-close aria-label="Закрыть"><i class="icon close-icon" aria-hidden="true"></i></button></div>
+    <form id="report-settings-form">
+      <label>Какие предложения включить
+        <select name="offers">
+          <option value="active">Без исключённых</option>
+          <option value="used">Только цены, использованные в расчёте</option>
+          <option value="all">Все предложения</option>
+        </select>
+      </label>
+      <label class="confirm"><input type="checkbox" name="details"> Подробные характеристики предложений</label>
+      <label class="confirm"><input type="checkbox" name="sources"> Список проверенных источников</label>
+      <p class="muted" id="report-row-count" role="status"></p>
+      <div class="dialog-actions"><button type="button" class="outline" data-close>Отмена</button><button class="primary" type="submit">Показать отчёт</button></div>
+    </form>
+  </dialog>
+  <dialog id="report-dialog" class="modal report-modal" aria-labelledby="report-title">
+    <div class="dialog-head screen-only"><div><p class="eyebrow">Предпросмотр</p><h2 id="report-title">Обоснование НМЦД</h2></div>
+      <button class="close" type="button" data-close aria-label="Закрыть"><i class="icon close-icon" aria-hidden="true"></i></button></div>
+    <div id="report-body" class="report-paper"></div>
+    <div class="dialog-actions screen-only"><button class="outline" id="edit-report-settings">Настройки</button><button class="primary" id="print-report"><i class="icon report" aria-hidden="true"></i>Печать (PDF)</button><button class="lilac" id="download-xlsx"><i class="icon download" aria-hidden="true"></i>Экспорт в XLSX</button><button class="outline" id="download-report">HTML</button><p id="export-status" role="status" class="muted"></p></div>
+  </dialog>
+</body>
+</html>
