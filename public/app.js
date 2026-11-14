@@ -1,5 +1,5 @@
-import {units, evaluate, round, deliveredEstimate} from './analysis.js?v=63';
-import {parseSpecification,parsePdfSpecification,positionRequest,suggestedAnalogQuery} from './specification.js?v=63';
+import {units, evaluate, round, deliveredEstimate} from './analysis.js?v=64';
+import {parseSpecification,parsePdfSpecification,positionRequest,suggestedAnalogQuery} from './specification.js?v=64';
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -274,7 +274,8 @@ function showSection(section){
   document.querySelector('.workflow').hidden=section!=='purchase';
   $('results-header').hidden=section!=='results';
   document.querySelectorAll('.sidebar nav a').forEach(link=>{
-    if((link.hash==='#offers-title')===(section==='results')) link.setAttribute('aria-current','page');
+    const target={'#calculation':'purchase','#offers-title':'results','#method':'method'}[link.hash];
+    if(target===section) link.setAttribute('aria-current','page');
     else link.removeAttribute('aria-current');
   });
 
